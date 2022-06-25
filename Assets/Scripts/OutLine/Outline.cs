@@ -14,13 +14,18 @@ public class Outline : MonoBehaviour
     
     void Awake()
     {
-        highlight = gameObject.AddComponent<HighlightEffect>();
+        highlight = gameObject.GetComponent<HighlightEffect>();
+        if (highlight == null) 
+        {
+            highlight = gameObject.AddComponent<HighlightEffect>();
+            highlight.outlineColor = Color.yellow;
+            highlight.overlay = 0;
+            highlight.overlayMinIntensity = 0;
+
+        }
         highlight.seeThrough = SeeThroughMode.Never;
         highlight.outlineVisibility = Visibility.AlwaysOnTop;
         highlight.outlineWidth = 0.5f;
-        highlight.outlineColor = Color.yellow;
-        highlight.overlay = 0;
-        highlight.overlayMinIntensity = 0;
         highlight.glow = 0f;
         highlight.glowWidth = 0f;
         highlight.glowAnimationSpeed = 0.5f;

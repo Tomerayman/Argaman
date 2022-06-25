@@ -2,13 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PivotObject : PivotButton
+public class PivotObject : ArgButton
 {
-    private Outline outline;
+    protected Outline outline;
 
     protected override void Awake()
     {
-        outline = gameObject.AddComponent<Outline>();
+        pivotPoint.mainButton = this;
+        outline = gameObject.GetComponent<Outline>();
+        if (outline == null) outline = gameObject.AddComponent<Outline>();
+    }
+
+    protected override void Start()
+    {
+        gameObject.SetActive(pivotPoint.isActiveAndEnabled);
+    }
+
+    protected override void Update()
+    {
+        
     }
 
     private void OnMouseEnter()
@@ -19,5 +31,10 @@ public class PivotObject : PivotButton
     private void OnMouseExit()
     {
         outline.Hide();
+    }
+
+    private void OnMouseDown()
+    {
+        pivotPoint.OnClick();
     }
 }

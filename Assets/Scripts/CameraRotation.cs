@@ -6,7 +6,8 @@ using DG.Tweening;
 public class CameraRotation : MonoBehaviour
 {
     public static CameraRotation Instance { get; private set; }
-    public PivotPoint pivot;
+    public static PivotPoint pivot;
+    public PivotPoint startPivot;
     public float mouseRotationSpeed = 3;
     public float mouseScrollSpeed = 3;
     public float damping = 5;
@@ -16,12 +17,14 @@ public class CameraRotation : MonoBehaviour
     private float _originalDistance;
     
     public bool IsMidTransition { get; private set; }
+    public bool IsLocked { get; set; }
 
 
     private void Awake()
     {
         Instance = this;
         IsMidTransition = false;
+        pivot = startPivot;
         _prevPos = Vector2.zero;
         _force = Vector3.zero;
         _backStack = new Stack<PivotPoint>();
@@ -29,17 +32,18 @@ public class CameraRotation : MonoBehaviour
 
     private void Start()
     {
-        transform.parent = pivot.transform;
+        transform.parent = pivot.axis;
         transform.position = pivot.spawnPoint.transform.position;
         transform.rotation = pivot.spawnPoint.transform.rotation;
-        transform.forward = pivot.transform.position - transform.position;
+        transform.forward = pivot.axis.position - transform.position;
         transform.eulerAngles += pivot.offset;
-        _originalDistance = (transform.position - pivot.transform.position).magnitude;
+        _originalDistance = (transform.position - pivot.axis.position).magnitude;
         pivot.SetActive(true);
     }
 
     private void Update()
     {
+        if (IsLocked) return;
         if (Input.GetMouseButton(0))
         {
             OnMouseDrag();
@@ -77,13 +81,13 @@ public class CameraRotation : MonoBehaviour
             _force = Vector3.zero;
             return;
         }
-        transform.forward = pivot.transform.position - transform.position;
+        transform.forward = pivot.axis.position - transform.position;
         transform.eulerAngles += pivot.offset;
-        pivot.transform.eulerAngles += _force;
+        pivot.axis.eulerAngles += _force;
         _force *= damping;
         
         // rotation clamping:
-        Vector3 rotation = pivot.transform.eulerAngles;
+        Vector3 rotation = pivot.axis.eulerAngles;
         float nX = rotation.x > 180 ? rotation.x - 360 : rotation.x;
         float nY = rotation.y > 180 ? rotation.y - 360 : rotation.y;
         float clampedX = pivot.xRange != null ?
@@ -93,14 +97,14 @@ public class CameraRotation : MonoBehaviour
             Mathf.Clamp(nY, pivot.yRange.x, pivot.yRange.y):
             nY;
         Vector3 result = new Vector3(clampedX, clampedY, rotation.z);
-        pivot.transform.eulerAngles = result;
+        pivot.axis.eulerAngles = result;
     }
 
     public void OnMouseScroll(Vector2 s)
     {
         if (IsMidTransition) return;
         float scroll = -s.normalized.y;
-        Vector3 pivotPos = pivot.transform.position;
+        Vector3 pivotPos = pivot.axis.position;
         Vector3 direction = transform.position - pivotPos;
         float maxDistance = _originalDistance;
         float minDistance = _originalDistance * 0.6f;
@@ -126,14 +130,18 @@ public class CameraRotation : MonoBehaviour
         transform.DOMove(newPos, 2);
         transform.DORotateQuaternion(newRot, 2).OnComplete(() =>
         {
-            _originalDistance = Vector3.Distance(transform.position, pivot.transform.position);
+            _originalDistance = Vector3.Distance(transform.position, p.axis.position);
             IsMidTransition = false;
+            p.onFinishEnter.Invoke();
         });
-        transform.parent = p.transform;        
+        transform.parent = p.axis;        
         pivot.Reset();
         p.SetActive(true);
+        p.SetSubItems(true);
+        pivot.SetSubItems(false);
         if (!isBack) _backStack.Push(pivot);
         pivot = p;
+        IsLocked = false;
     }
 
     public void OnPressBack()

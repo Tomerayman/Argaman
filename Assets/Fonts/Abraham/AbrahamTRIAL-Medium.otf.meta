@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: db5a0b55e5d9c8042ad2f18c0401cd06
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Abraham TRIAL
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 860862c846f94584293a2bfb72b8ab30, type: 3}
+  - {fileID: 12800000, guid: 4103565f9bc36f34381352a98779f0f5, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

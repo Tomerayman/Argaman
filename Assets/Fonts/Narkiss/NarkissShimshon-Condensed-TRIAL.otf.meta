@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: d524dea54a655eb41a3a798974014455
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Narkiss Shimshon TRIAL
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: b395bdffd9069144f9a079978cf98a4b, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
