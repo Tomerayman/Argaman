@@ -11,6 +11,7 @@ public class LocationUI : MonoBehaviour
 {
     public RectTransform mainPanel;
     public RectTransform videoPanel;
+    public RectTransform imagesPanel;
     public VideoPlayer player;
     public List<buttonIcons> panelButtons;
     public GameObject playButton;
@@ -19,6 +20,7 @@ public class LocationUI : MonoBehaviour
 
     bool showingMainPanel = false;
     bool showingVideoPanel = false;
+    bool showingImagesPanel = false;
     private Vector2 playerSmallSize;
 
     private void Awake()
@@ -26,6 +28,7 @@ public class LocationUI : MonoBehaviour
         //Vector3 p = Vector3.right * mainPanel.rect.width;
         mainPanel.position += Vector3.right * mainPanel.rect.width;
         videoPanel.position += Vector3.down * videoPanel.rect.height;
+        imagesPanel.position += Vector3.down * imagesPanel.rect.height;
         playerSmallSize = player.GetComponent<RectTransform>().sizeDelta;
     }
 
@@ -47,19 +50,21 @@ public class LocationUI : MonoBehaviour
         videoPanel.DOMoveY(y, 1).OnComplete(() => videoPanel.gameObject.SetActive(open));
     }
 
+    public void SetImagesPanel(bool open)
+    {
+        if (showingImagesPanel == open) return;
+        showingImagesPanel = open;
+        imagesPanel.gameObject.SetActive(true);
+        float y = open ? imagesPanel.rect.height * 0.5f : -imagesPanel.rect.height * 1.5f;
+        imagesPanel.DOMoveY(y, 1).OnComplete(() => imagesPanel.gameObject.SetActive(open));
+    }
+
     public void GoToPanel(string panel)
     {
-        if (panel.Equals("Video"))
-        {
-            SetMainPanel(false);
-            SetVideoPanel(true);
-        }
-        else if (panel.Equals("Main"))
-        {
-            SetMainPanel(true);
-            SetVideoPanel(false);
-        }
-
+        SetMainPanel(panel.Equals("Main"));
+        SetVideoPanel(panel.Equals("Video"));
+        SetImagesPanel(panel.Equals("Images"));
+        
         foreach (buttonIcons bi in panelButtons)
         {
             bi.im.sprite = 
