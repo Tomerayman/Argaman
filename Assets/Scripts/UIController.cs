@@ -5,6 +5,7 @@ using UnityEngine;
 public class UIController : MonoBehaviour
 {
     public GameObject mainViewsButtons;
+    public GameObject headerButtons;
 
     public void SetMainViewsButtons(bool active)
     {

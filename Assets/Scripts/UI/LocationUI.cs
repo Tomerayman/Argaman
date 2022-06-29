@@ -12,63 +12,80 @@ public class LocationUI : MonoBehaviour
     public RectTransform mainPanel;
     public RectTransform videoPanel;
     public RectTransform imagesPanel;
+    public RectTransform storiesPanel;
     public VideoPlayer player;
     public List<buttonIcons> panelButtons;
     public GameObject playButton;
     public buttonIcons videoBackButton;
+    public RectTransform storyElementsParent;
+    public Button prevStoryButton;
+    public Button nextStoryButton;
+    private Dictionary<string, RectTransform> panels;
     
-
-    bool showingMainPanel = false;
-    bool showingVideoPanel = false;
-    bool showingImagesPanel = false;
     private Vector2 playerSmallSize;
+    private List<RectTransform> _stories;
+    private int _currStory = 0;
+
 
     private void Awake()
     {
-        //Vector3 p = Vector3.right * mainPanel.rect.width;
-        mainPanel.position += Vector3.right * mainPanel.rect.width;
-        videoPanel.position += Vector3.down * videoPanel.rect.height;
-        imagesPanel.position += Vector3.down * imagesPanel.rect.height;
         playerSmallSize = player.GetComponent<RectTransform>().sizeDelta;
+        panels = new Dictionary<string, RectTransform>()
+        {
+            {"Main", mainPanel},
+            {"Video", videoPanel},
+            {"Images", imagesPanel},
+            {"Stories", storiesPanel},
+        };
+        foreach (var panel in panels)
+        {
+            if (panel.Value == null) continue;
+            panel.Value.position += panel.Key.Equals("Main") ?
+                Vector3.right * panel.Value.rect.width :
+                Vector3.down * Screen.width;
+            panel.Value.gameObject.SetActive(false);
+        }
+
+        // stories Init;
+        if (storyElementsParent == null) return;
+        _stories = new List<RectTransform>();
+        foreach (RectTransform story in storyElementsParent)
+        {
+            _stories.Add(story);
+            if (_stories.Count > 1) story.position += Vector3.right * Screen.width;
+        }
+        prevStoryButton.interactable = false;
     }
 
     public void SetMainPanel(bool open)
     {
-        if (showingMainPanel == open) return;
-        showingMainPanel = open;
+        if (mainPanel.gameObject.activeSelf == open) return;
         mainPanel.gameObject.SetActive(true);
         float x = open ? 0 : mainPanel.rect.width;
         mainPanel.DOMoveX(Screen.width + x, 1).OnComplete(()=> mainPanel.gameObject.SetActive(open));
     }
 
-    public void SetVideoPanel(bool open)
+
+    public void SetContentPanel(RectTransform panel, bool open)
     {
-        if (showingVideoPanel == open) return;
-        showingVideoPanel = open;
-        videoPanel.gameObject.SetActive(true);
-        float y = open ? videoPanel.rect.height * 0.5f : -videoPanel.rect.height * 1.5f;
-        videoPanel.DOMoveY(y, 1).OnComplete(() => videoPanel.gameObject.SetActive(open));
+        if (panel.gameObject.activeSelf == open) return;
+        panel.gameObject.SetActive(true);
+        float y = open ? Screen.height * 0.5f : -Screen.height * 1.5f;
+        panel.DOMoveY(y, 1).OnComplete(() => panel.gameObject.SetActive(open));
     }
 
-    public void SetImagesPanel(bool open)
+    public void GoToPanel(string nextPanel)
     {
-        if (showingImagesPanel == open) return;
-        showingImagesPanel = open;
-        imagesPanel.gameObject.SetActive(true);
-        float y = open ? imagesPanel.rect.height * 0.5f : -imagesPanel.rect.height * 1.5f;
-        imagesPanel.DOMoveY(y, 1).OnComplete(() => imagesPanel.gameObject.SetActive(open));
-    }
-
-    public void GoToPanel(string panel)
-    {
-        SetMainPanel(panel.Equals("Main"));
-        SetVideoPanel(panel.Equals("Video"));
-        SetImagesPanel(panel.Equals("Images"));
+        foreach (var kv in panels)
+        {
+            if (kv.Key.Equals("Main")) SetMainPanel(nextPanel.Equals("Main"));
+            else if (kv.Value != null) SetContentPanel(kv.Value, nextPanel.Equals(kv.Key));
+        }
         
         foreach (buttonIcons bi in panelButtons)
         {
             bi.im.sprite = 
-                bi.im.name.Equals(panel) ? bi.on : bi.off;
+                bi.im.name.Equals(nextPanel) ? bi.on : bi.off;
         }
     }
 
@@ -98,7 +115,6 @@ public class LocationUI : MonoBehaviour
         b.onClick.AddListener(() => GoToPanel("Main"));
     }
 
-    
 
     [Serializable]
     public class buttonIcons
@@ -112,6 +128,24 @@ public class LocationUI : MonoBehaviour
     {
         if (player.isPlaying) player.Pause();
         else player.Play();
+    }
+
+    public void MoveStory(bool next)
+    {
+        if (next && _currStory == _stories.Count - 1) return;
+        else if (!next && _currStory == 0) return;
+        int moveFactor = next ? 1 : -1;
+        float movement = Screen.width * moveFactor;
+        _stories[_currStory].DOMoveX(_stories[_currStory].position.x - movement, 1);
+        _currStory += moveFactor;
+        _stories[_currStory].DOMoveX(_stories[_currStory].position.x - movement, 1);
+        prevStoryButton.interactable = (_currStory > 0);
+        nextStoryButton.interactable = (_currStory < _stories.Count - 1);
+    }
+
+    public void ResetVideo()
+    {
+        player.time = 0;
     }
 
 }
