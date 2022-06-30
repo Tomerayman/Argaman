@@ -13,18 +13,30 @@ public class LocationUI : MonoBehaviour
     public RectTransform videoPanel;
     public RectTransform imagesPanel;
     public RectTransform storiesPanel;
+    public RectTransform docsPanel;
     public VideoPlayer player;
     public List<buttonIcons> panelButtons;
     public GameObject playButton;
     public buttonIcons videoBackButton;
-    public RectTransform storyElementsParent;
-    public Button prevStoryButton;
-    public Button nextStoryButton;
+
+    public List<GalleryFramework> galleries;
+
+    //public RectTransform storyElementsParent;
+    //public Button prevStoryButton;
+    //public Button nextStoryButton;
+    
+    //public RectTransform docsElementsParent;
+    //public Button prevDocButton;
+    //public Button nextDocButton;
     private Dictionary<string, RectTransform> panels;
     
     private Vector2 playerSmallSize;
-    private List<RectTransform> _stories;
-    private int _currStory = 0;
+    //private List<RectTransform> _stories;
+    //private List<RectTransform> _docs;
+    //private int _currStory = 0;
+    //private int _currDoc = 0;
+    private Dictionary<string, GalleryFramework> _gl;
+
 
 
     private void Awake()
@@ -36,6 +48,7 @@ public class LocationUI : MonoBehaviour
             {"Video", videoPanel},
             {"Images", imagesPanel},
             {"Stories", storiesPanel},
+            {"Docs", docsPanel}
         };
         foreach (var panel in panels)
         {
@@ -46,15 +59,21 @@ public class LocationUI : MonoBehaviour
             panel.Value.gameObject.SetActive(false);
         }
 
-        // stories Init;
-        if (storyElementsParent == null) return;
-        _stories = new List<RectTransform>();
-        foreach (RectTransform story in storyElementsParent)
+        _gl = new Dictionary<string, GalleryFramework>();
+        foreach (GalleryFramework g in galleries)
         {
-            _stories.Add(story);
-            if (_stories.Count > 1) story.position += Vector3.right * Screen.width;
+            _gl.Add(g.Key, g);
+            g.elements = new List<RectTransform>();
+            foreach (RectTransform element in g.elementsParent)
+            {
+                g.elements.Add(element);
+                if (g.elements.Count > 1) element.position += Vector3.right * Screen.width;
+            }
+            g.prevButton.interactable = false;
         }
-        prevStoryButton.interactable = false;
+
+        foreach (buttonIcons bi in panelButtons)
+            bi.im.gameObject.GetComponent<UIButton>().hoverSprite = bi.on;
     }
 
     public void SetMainPanel(bool open)
@@ -81,12 +100,12 @@ public class LocationUI : MonoBehaviour
             if (kv.Key.Equals("Main")) SetMainPanel(nextPanel.Equals("Main"));
             else if (kv.Value != null) SetContentPanel(kv.Value, nextPanel.Equals(kv.Key));
         }
-        
-        foreach (buttonIcons bi in panelButtons)
-        {
-            bi.im.sprite = 
-                bi.im.name.Equals(nextPanel) ? bi.on : bi.off;
-        }
+
+        //foreach (buttonIcons bi in panelButtons)
+        //{
+        //    bi.im.sprite =
+        //        bi.im.name.Equals(nextPanel) ? bi.on : bi.off;
+        //}
     }
 
     public void StartVideo()
@@ -116,14 +135,6 @@ public class LocationUI : MonoBehaviour
     }
 
 
-    [Serializable]
-    public class buttonIcons
-    {
-        public Image im;
-        public Sprite on;
-        public Sprite off;
-    }
-
     public void PlayPuaseVideo()
     {
         if (player.isPlaying) player.Pause();
@@ -132,15 +143,27 @@ public class LocationUI : MonoBehaviour
 
     public void MoveStory(bool next)
     {
-        if (next && _currStory == _stories.Count - 1) return;
-        else if (!next && _currStory == 0) return;
+        MoveGalleryElements(_gl["Stories"], next);
+    }
+
+    public void MoveDoc(bool next)
+    {
+        MoveGalleryElements(_gl["Docs"], next);
+    }
+
+    public void MoveGalleryElements(GalleryFramework g, bool next)
+    {
+        if (next && g.currElement == g.elements.Count - 1) return;
+        else if (!next && g.currElement == 0) return;
         int moveFactor = next ? 1 : -1;
         float movement = Screen.width * moveFactor;
-        _stories[_currStory].DOMoveX(_stories[_currStory].position.x - movement, 1);
-        _currStory += moveFactor;
-        _stories[_currStory].DOMoveX(_stories[_currStory].position.x - movement, 1);
-        prevStoryButton.interactable = (_currStory > 0);
-        nextStoryButton.interactable = (_currStory < _stories.Count - 1);
+        CurrElement().DOMoveX(CurrElement().position.x - movement, 1);
+        g.currElement += moveFactor;
+        CurrElement().DOMoveX(CurrElement().position.x - movement, 1);
+        g.prevButton.interactable = (g.currElement > 0);
+        g.nextButton.interactable = (g.currElement < g.elements.Count - 1);
+
+        RectTransform CurrElement() => g.elements[g.currElement];
     }
 
     public void ResetVideo()
@@ -148,4 +171,21 @@ public class LocationUI : MonoBehaviour
         player.time = 0;
     }
 
+    [Serializable]
+    public class buttonIcons
+    {
+        public Image im;
+        public Sprite on;
+        public Sprite off;
+    }
+
+    [Serializable] public class GalleryFramework
+    {
+        public string Key;
+        public RectTransform elementsParent;
+        public Button prevButton;
+        public Button nextButton;
+        [NonSerialized] public int currElement;
+        [NonSerialized] public List<RectTransform> elements;
+    }
 }
